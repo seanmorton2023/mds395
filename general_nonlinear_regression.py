@@ -23,28 +23,27 @@ mse_threshold = 0.01
 error = 1000
 
 def MSE(coeffs, x_array, y_array):
+    '''different values of omega will be the diff. coefficients in the array
+    assume (n+1) coefficients for a nth-order polynomial
+
+    assume length of "coeffs" array is unknown, but that
+    coeffs corresponds to highest order down to lowest order
+    this means where n = length of xoeffs array, coeffs has 
+    coefficients for x^(n-1) down to x^0'''
+
     num_values = len(x_array)
     if len(x_array) != len(y_array):
         raise ValueError("x and y arrays aren't the same size, 3head")
 
-    #different values of omega will be the diff. coefficients in the array
-    #assume 6 coefficients for a 5th-order polynomial
-    w0 = coeffs[0]
-    w1 = coeffs[1]
-    w2 = coeffs[2]
-    w3 = coeffs[3]
-    w4 = coeffs[4]
-    w5 = coeffs[5]
-
     #iterate through each value in the array
-    sum = 0
+    mse_sum = 0
     for i in range(len(x_array)):
         x_n = x_array[i]
         y_n = y_array[i]
-        sum += (y_n - (w0*x_n**5 + w1*x_n**4 + w2*x_n**3 + w3*x_n**2
-                       + w4*x_n + w5))**2
+        y_pred = sum([coeffs[j] * x_n**(len(coeffs) - j - 1) for j in range(len(coeffs))])
+        mse_sum += (y_n - y_pred)**2
 
-    return sum / num_values
+    return mse_sum / num_values
 
 def r_squared(x_array, y_array, y_stars):
     num_values = len(x_array)
@@ -83,22 +82,24 @@ def dE_d_omega_0(coeffs, x_array, y_array):
 
     #different values of omega will be the diff. coefficients in the array
     #assume 6 coefficients for a 5th-order polynomial
-    w0 = coeffs[0]
-    w1 = coeffs[1]
-    w2 = coeffs[2]
-    w3 = coeffs[3]
-    w4 = coeffs[4]
-    w5 = coeffs[5]
+    #w0 = coeffs[0]
+    #w1 = coeffs[1]
+    #w2 = coeffs[2]
+    #w3 = coeffs[3]
+    #w4 = coeffs[4]
+    #w5 = coeffs[5]
 
     #iterate through each value in the array
-    sum = 0
+    deriv_sum = 0
     for i in range(len(x_array)):
         x_n = x_array[i]
         y_n = y_array[i]
-        sum += x_n**5 * (y_n - (w0*x_n**5 + w1*x_n**4 + w2*x_n**3 + w3*x_n**2
-                       + w4*x_n + w5))
+        y_pred = sum([coeffs[j] * x_n**(len(coeffs) - j - 1) for j in range(len(coeffs))])
+        #deriv_sum += x_n**5 * (y_n - (w0*x_n**5 + w1*x_n**4 + w2*x_n**3 + w3*x_n**2
+        #               + w4*x_n + w5))
+        deriv_sum += x_n**5 * (y_n - y_pred)
 
-    return sum * (-2 / num_values)
+    return deriv_sum * (-2 / num_values)
 
 def dE_d_omega_1(coeffs, x_array, y_array):
     num_values = len(x_array)
