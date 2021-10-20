@@ -24,7 +24,7 @@ error = 1000
 def MSE(omega_0, omega_1, x_array, y_array):
     num_values = len(x_array)
     if len(x_array) != len(y_array):
-        raise ValueError("x and y arrays aren't the same size, 3head")
+        raise ValueError("x and y arrays aren't the same size")
 
     #iterate through each value in the array
     sum = 0
@@ -38,7 +38,7 @@ def MSE(omega_0, omega_1, x_array, y_array):
 def r_squared(x_array, y_array, y_stars):
     num_values = len(x_array)
     if len(x_array) != len(y_array):
-        raise ValueError("x and y arrays aren't the same size, 3head")
+        raise ValueError("x and y arrays aren't the same size")
 
     #print(y_array)
     #print(type(y_array))
@@ -112,8 +112,6 @@ if __name__ == '__main__':
     print(x_array)
     print(y_array)
 
-
-
     #test out our rsquared function
     #r_sq1 = r_squared(x_array, y_array, y_pred)
     #r_sq2 = (pearsonr(y_array, y_pred))**2
@@ -124,7 +122,8 @@ if __name__ == '__main__':
        
         #make our first guess as to the model
         y_pred = coeffs[0]*x_array + coeffs[1]
-        r_sq1 = r_squared(x_array, y_array, y_pred)
+        r = pearsonr(y_array, y_pred)[0]
+        r_sq1 = r**2
 
         #find error of the current approximation
         error = MSE(coeffs[0], coeffs[1], x_array, y_array)
@@ -146,5 +145,9 @@ if __name__ == '__main__':
 
     #plt.scatter(x_array, y_array)
     plt.scatter(x_array, y_plus_noise)
-    plt.plot(x_array, y_pred)
+    plt.plot(x_array, y_array, c='gray')
+    plt.plot(x_array, y_pred, c='black',
+             label='R_squared: '+ str(round(r_sq1, 4)))
+    plt.title("Linear regression with Morton Model")
+    plt.legend()
     plt.show()
