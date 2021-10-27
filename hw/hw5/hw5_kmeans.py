@@ -26,7 +26,6 @@ def read_data():
         #split line by csv
         line = line.replace('\n','')
         line_list = line.split(',')
-        #print(line_list)
 
         #once we get to an empty line, stop reading lines
         if line_list[0] == '':
@@ -68,7 +67,6 @@ def fsdam(array):
     distances_array_means = [np.linalg.norm(array[i]-array_means) for i in range(num_samples)]
     sum_distances = sum(distances_array_means)
 
-    #print(distances_array_means)
     return sum_distances
 
 def fsdcm(array, class_means, class_ids):
@@ -95,15 +93,9 @@ def fsdcm(array, class_means, class_ids):
         class_id = class_ids[i]
         sample_array = array[i]
         cluster_mean_array = class_means[class_id]
-
-        #print('\nSample array and cluster mean array:')
-        #print(sample_array)
-        #print(cluster_mean_array)
-        #print('class_id = ' + str(class_id))
         distance_cluster_mean = np.linalg.norm(sample_array - cluster_mean_array)
         dcms.append(distance_cluster_mean)
 
-    #print(dcms)
     return sum(dcms)
 
 def fgvf(array, class_means, class_ids):
@@ -126,22 +118,15 @@ def find_k_vs_gvf(array, k_max = 10):
         kmeans = KMeans(n_clusters = k, random_state = 0).fit(array)
         class_means = kmeans.cluster_centers_
         class_ids = kmeans.labels_
-        #print('\nCluster centers:')
-        #print(class_means)
-
-        #print('\nGVF for k = ' + str(k) + ':')
         gvf = fgvf(array, class_means, class_ids)
         gvf_array.append(gvf)
-        #print(gvf)
                                                        
     #plot the relation between k and GVf
     return k_array, gvf_array
 
 def plot_k_vs_gvf(mech_array, therm_array, elec_array):
-    #find optimal values of k and plot them
-    print('\nMechanical properties array:')
+    #make plots to determine optimal k for each property
     k_array_mech, gvf_array_mech = find_k_vs_gvf(mech_array, k_max = 25)
-    print('\nThermal properties array:')
     k_array_therm, gvf_array_therm = find_k_vs_gvf(therm_array,  k_max = 12)
     k_array_elec, gvf_array_elec = find_k_vs_gvf(elec_array,k_max = 11)
 
@@ -164,6 +149,32 @@ def plot_k_vs_gvf(mech_array, therm_array, elec_array):
     plt.ylabel('Goodness of Fit (GVF)')
     plt.show()
 
+def plot_elec_clusters(elec_array, elec_k):
+    #graph electrical properties to test this out
+
+    elec_kmeans = KMeans(n_clusters = elec_k, random_state = 0).fit(elec_array)
+    elec_class_ids = elec_kmeans.labels_
+    elec_class_means = elec_kmeans.cluster_centers_
+    
+    #separate the data points into different lists based on which
+    #classID they are. iterate through each of the class IDs to figure out
+    classid = 0
+    lst_by_class = []
+
+    for classid in range(elec_k):
+        data = [elec_array[i][0] for i in range(len(elec_array)) if 
+                elec_class_ids[i] == classid]
+        lst_by_class.append(data)
+
+    #iterate through and plot the data of different classes by color
+    plt.figure(1)
+    for i in range(elec_k):
+        classx = lst_by_class[i]
+        y_axis = [0]*len(classx)
+        plt.scatter(classx, y_axis, s=32)
+
+    plt.show()
+
 
 if __name__ == '__main__':
     name_list, data_list = read_data()
@@ -178,5 +189,37 @@ if __name__ == '__main__':
     therm_array = np.asarray(therm_data)
     elec_array = np.asarray(elec_data)
 
-    #make plots to determine optimal k for each property
-    plot_k_vs_gvf(mech_array, therm_array, elec_array)
+    #ideal values of k: k_mech = 11, k_therm = 6, k_elec = 5
+    #plot thermal data in 3D to visualize clusters
+    k_therm = 6
+    kmeans_therm = KMeans(n_clusters = k_therm, random_state = 0).fit(therm_array)
+    therm_class_ids = kmeans_therm.labels_
+    therm_class_means = kmeans_therm.cluster_centers_
+
+    #separate the data points into different lists based on which
+    #classID they are. iterate through each of the class IDs to figure out
+    classid = 0
+    lst_by_class = []
+
+    for classid in range(k_therm):
+        data = [np.ndarray.tolist(therm_array[i]) for i in range(len(therm_array)) if 
+                therm_class_ids[i] == classid]
+        lst_by_class.append(data)
+
+    #iterate through and plot the data of different classes by color
+    fig = plt.figure(1)
+    ax = fig.add_subplot(projection = '3d')
+
+    for i in range(k_therm):
+
+        class_points = lst_by_class[i]
+        class_x = [point[0] for point in class_points]
+        class_y = [point[1] for point in class_points]
+        class_z = [point[2] for point in class_points]
+       
+        ax.scatter(class_x, class_y, class_z)
+
+    ax.set_xlabel('Thermal conductivity')
+    ax.set_ylabel('Specific heat capacity')
+    ax.set_zlabel('Coefficient of thermal expansion')
+    plt.show()
