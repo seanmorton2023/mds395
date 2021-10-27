@@ -29,7 +29,7 @@ def read_data():
 
         #once we get to an empty line, stop reading lines
         if line_list[0] == '':
-            break
+            continue
 
         #let each index of each list correspond to the data of one metal
         name = line_list[0:2]
@@ -41,7 +41,10 @@ def read_data():
 
         #time.sleep(1)
 
-    return name_array, data_array
+    means_and_stdevs = data_array[-2:]
+    data_points_array = data_array[:-2]
+
+    return name_array, data_points_array, means_and_stdevs
 
 def fsdam(array):
     '''calculates the sum of deviations from array mean
@@ -175,26 +178,19 @@ def plot_elec_clusters(elec_array, elec_k):
 
     plt.show()
 
-
-if __name__ == '__main__':
-    name_list, data_list = read_data()
-
-    #extract mechanical, thermal, electrical data from array of lists
-    mech_data = [inner_list[0:7] for inner_list in data_list]
-    therm_data = [inner_list[7:10] for inner_list in data_list]
-    elec_data = [inner_list[10:11] for inner_list in data_list]
-
-    #convert to numpy format
-    mech_array = np.asarray(mech_data)
-    therm_array = np.asarray(therm_data)
-    elec_array = np.asarray(elec_data)
-
-    #ideal values of k: k_mech = 11, k_therm = 6, k_elec = 5
+def plot_therm_clusters(therm_array, k_therm, means_and_stdevs):
     #plot thermal data in 3D to visualize clusters
-    k_therm = 6
     kmeans_therm = KMeans(n_clusters = k_therm, random_state = 0).fit(therm_array)
     therm_class_ids = kmeans_therm.labels_
     therm_class_means = kmeans_therm.cluster_centers_
+
+    #de-normalize data using d = d_normal * sigma + mu
+    denorm_array = []
+    for data in therm_array:
+        denorm_array.append([data[i] * means_and_stdevs[1][i] 
+                + means_and_stdevs[0][i] for i in range(len(data))] )
+
+    therm_array = denorm_array[:]
 
     #separate the data points into different lists based on which
     #classID they are. iterate through each of the class IDs to figure out
@@ -202,7 +198,7 @@ if __name__ == '__main__':
     lst_by_class = []
 
     for classid in range(k_therm):
-        data = [np.ndarray.tolist(therm_array[i]) for i in range(len(therm_array)) if 
+        data = [therm_array[i] for i in range(len(therm_array)) if 
                 therm_class_ids[i] == classid]
         lst_by_class.append(data)
 
@@ -222,4 +218,85 @@ if __name__ == '__main__':
     ax.set_xlabel('Thermal conductivity')
     ax.set_ylabel('Specific heat capacity')
     ax.set_zlabel('Coefficient of thermal expansion')
+    ax.set_title('Thermal properties of steels with k=6 clusters')
     plt.show()
+
+def classify_and_export(mech_array, therm_array, elec_array):
+    #selected values of k
+    k_mech = 11
+    k_therm = 6
+    k_elec = 5
+    
+    #find clusters of data and show them with the normalized data
+    mech_kmeans = KMeans(n_clusters = k_mech, random_state = 0).fit(mech_array)
+    therm_kmeans = KMeans(n_clusters = k_therm, random_state = 0).fit(therm_array)
+    elec_kmeans = KMeans(n_clusters = k_elec, random_state = 0).fit(elec_array)
+
+    mech_class_ids = mech_kmeans.labels_
+    therm_class_ids = therm_kmeans.labels_
+    elec_class_ids = elec_kmeans.labels_
+
+    #group together the normalized data and their classIDs to export to csv
+    mech_array_and_classid = [list(np.concatenate(( [mech_class_ids[i]], mech_array[i] )) )
+                                              for i in range(len(mech_array)) ]
+    mech_array_and_classid = np.array(mech_array_and_classid)
+
+
+    therm_array_and_classid = [list(np.concatenate(( [therm_class_ids[i]], therm_array[i] )) )
+                                              for i in range(len(therm_array)) ]
+    therm_array_and_classid = np.array(therm_array_and_classid)
+
+
+    elec_array_and_classid = [list(np.concatenate(( [elec_class_ids[i]], elec_array[i] )) )
+                                              for i in range(len(elec_array)) ]
+    elec_array_and_classid = np.array(elec_array_and_classid)
+
+    #export all these class data arrays to CSV
+    f = open('mech_array_labeled.csv', 'w')
+    g = open('therm_array_labeled.csv', 'w')
+    h = open('elec_array_labeled.csv', 'w')
+
+    num_points = len(mech_array_and_classid)
+    for i in range(num_points):
+
+        str_mech = ','.join([str(x) for x in mech_array_and_classid[i]])
+        str_therm = ','.join([str(x) for x in therm_array_and_classid[i]])
+        str_elec = ','.join([str(x) for x in elec_array_and_classid[i]])
+
+        f.write(str_mech + '\n')
+        g.write(str_therm + '\n')
+        h.write(str_elec + '\n')
+
+    f.close()
+    g.close()
+    h.close()
+
+if __name__ == '__main__':
+    name_list, data_list, means_and_stdevs = read_data()
+
+    #extract mechanical, thermal, electrical data from array of lists
+    mech_data = [inner_list[0:7] for inner_list in data_list]
+    therm_data = [inner_list[7:10] for inner_list in data_list]
+    elec_data = [inner_list[10:11] for inner_list in data_list]
+
+    #means and stdevs for data, for use in de-normalizing data
+    mech_mus_sigmas = [inner_list[0:7] for inner_list in means_and_stdevs]
+    therm_mus_sigmas = [inner_list[7:10] for inner_list in means_and_stdevs]
+    elec_mus_sigmas = [inner_list[10:11] for inner_list in means_and_stdevs]
+
+    #convert to numpy format
+    mech_array = np.asarray(mech_data)
+    therm_array = np.asarray(therm_data)
+    elec_array = np.asarray(elec_data)
+
+    #for finding ideal values of k for each set of properties
+    #plot_k_vs_gvf(mech_array, therm_array, elec_array)
+
+    #selected values of k
+    k_mech = 11
+    k_therm = 6
+    k_elec = 5
+
+    #plot_elec_clusters(elec_array, k_elec)
+    plot_therm_clusters(therm_array, k_therm, therm_mus_sigmas)
+    #classify_and_export(mech_array, therm_array, elec_array)
