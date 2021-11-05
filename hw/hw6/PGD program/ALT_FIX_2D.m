@@ -20,6 +20,7 @@ function [ Model, e, eB ] = ALT_FIX_2D( X,ec )
         if e(n)<ec
             break;
         end
+        
         M=0;
         M=M+R(:,:)*B.F2;
         B.F1=M/((B.F2'*B.F2)) ;

@@ -24,6 +24,7 @@ function [ Model, e, eB ] = ALT_FIX_4D( X,ec )
             index(k1,k2) = ~all(norm_X(k1,k2)==0,2); % Non-zero values
             end
         end
+        
         %---- Altenating fix point algorithm --------
         for n=1:nmax
             R=X-fna;  
@@ -32,10 +33,14 @@ function [ Model, e, eB ] = ALT_FIX_4D( X,ec )
                 norm_R(k1,k2)=norm(R(:,:,k1,k2));
                 end
             end
+
+
             e(n)=max(max(norm_R(index)./norm_X(index)));
             if e(n)<ec
                 break;
             end
+
+            
             M=0;
             for k2=1:K2
                 D2=diag(B.F4(k2,:));
@@ -46,6 +51,8 @@ function [ Model, e, eB ] = ALT_FIX_4D( X,ec )
                     end
                 end
             end
+
+
             B.F1=M/((B.F2'*B.F2)*(B.F3'*B.F3)*(B.F4'*B.F4)) ;
             M=0;
             for k2=1:K2
@@ -57,6 +64,8 @@ function [ Model, e, eB ] = ALT_FIX_4D( X,ec )
                     end
                 end
             end
+
+
             B.F2=M/((B.F1'*B.F1)*(B.F3'*B.F3)*(B.F4'*B.F4)) ;
             for k1=1:K1    
                 M=0;
@@ -67,7 +76,9 @@ function [ Model, e, eB ] = ALT_FIX_4D( X,ec )
                     end
                 end
                 B.F3(k1,:)=((B.F4'*B.F4)*(B.F2'*B.F2)*(B.F1'*B.F1))\diag(M);
-            end   
+            end
+
+
             for k2=1:K2   
                 M=0;
                 for k1=1:K1      
@@ -78,10 +89,12 @@ function [ Model, e, eB ] = ALT_FIX_4D( X,ec )
                 end
                 B.F4(k2,:)=((B.F3'*B.F3)*(B.F2'*B.F2)*(B.F1'*B.F1))\diag(M);
             end  
+
                 br1=norm(B.F1);
                 br2=norm(B.F2);
                 br3=norm(B.F3);
                 br4=norm(B.F4);
+
             for v=1:vmax
                        M=0;
                         for k2=1:K2
@@ -116,7 +129,9 @@ function [ Model, e, eB ] = ALT_FIX_4D( X,ec )
                                 end
                             end
                             B.F3(k1,:)=((B.F4'*B.F4)*(B.F2'*B.F2)*(B.F1'*B.F1))\diag(M);
-                        end   
+                        end
+
+
                         for k2=1:K2   
                             M=0;
                             for k1=1:K1     
@@ -126,7 +141,9 @@ function [ Model, e, eB ] = ALT_FIX_4D( X,ec )
                                 end
                             end
                             B.F4(k2,:)=((B.F3'*B.F3)*(B.F2'*B.F2)*(B.F1'*B.F1))\diag(M);
-                        end  
+                        end
+
+
                            bt1=norm(B.F1);
                            bt2=norm(B.F2);
                            bt3=norm(B.F3);     
@@ -135,6 +152,8 @@ function [ Model, e, eB ] = ALT_FIX_4D( X,ec )
                            eB.e2(v,n)=norm(bt2-bta2)/br2;
                            eB.e3(v,n)=norm(bt3-bta3)/br3;
                            eB.e4(v,n)=norm(bt4-bta4)/br4;
+                   
+                           
                    if eB.e1(v,n)<ebr&&eB.e2(v,n)<ebr&&eB.e3(v,n)<ebr&&eB.e4(v,n)<ebr
                        for k2=1:K2  
                            D2=diag(B.F4(k2,:)); 

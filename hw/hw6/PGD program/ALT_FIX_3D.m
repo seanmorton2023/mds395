@@ -17,6 +17,7 @@ function [ Model, e, eB ] = ALT_FIX_3D( X,ec )
     for k=1:K
         norm_X(k)=norm(X(:,:,k));
     end
+
     %---- Altenating fix point algorithm --------
     for n=1:nmax
         R=X-fna;  
@@ -72,11 +73,14 @@ function [ Model, e, eB ] = ALT_FIX_3D( X,ec )
                        eB.e1(v,n)=norm(bt1-bta1)/br1;
                        eB.e2(v,n)=norm(bt2-bta2)/br2;
                        eB.e3(v,n)=norm(bt3-bta3)/br3;
+
                if eB.e1(v,n)<ebr&&eB.e2(v,n)<ebr&&eB.e3(v,n)<ebr
+
                    for k=1:K
                    D=diag(B.F3(k,:));    
                    f(:,:,k)=B.F1*D*B.F2';  
                    end
+
                    Model.F1(:,n)=B.F1;
                    Model.F2(:,n)=B.F2;
                    Model.F3(:,n)=B.F3;
