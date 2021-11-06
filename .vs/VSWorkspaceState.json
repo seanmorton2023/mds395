@@ -2,9 +2,8 @@
   "ExpandedNodes": [
     "",
     "\\hw",
-    "\\hw\\hw6",
-    "\\hw\\hw6\\Code and data for SVD-PCA assignment"
+    "\\hw\\hw6"
   ],
-  "SelectedNode": "\\hw\\hw6\\Code and data for SVD-PCA assignment",
+  "SelectedNode": "\\hw\\hw6\\hw6_pca.py",
   "PreviewInSolutionExplorer": false
 }
